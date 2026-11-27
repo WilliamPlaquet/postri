@@ -3,7 +3,6 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import type { BoardSummary, NoteColor, UserInfo } from '../lib/types'
 import { initials } from '../lib/user'
 import { Icon } from './icons'
-import { useLanUrl } from '../lib/useLanUrl'
 import { useSession } from '../lib/session'
 import { TunnelBanner } from './Share'
 
@@ -114,7 +113,6 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
   const [creating, setCreating] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const lan = useLanUrl('/')
   const session = useSession()
 
   const load = () =>
@@ -163,6 +161,7 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
   }
 
   const shown = boards ? (showAll ? boards : boards.slice(0, RECENT)) : []
+  const toDelete = boards?.find((b) => b.id === confirmDelete) ?? null
 
   if (!session.host) {
     return (
@@ -238,11 +237,6 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
             ))}
           </div>
 
-          {lan && (
-            <p className="lan-hint">
-              Sur ton réseau, tes collègues rejoignent sur <a href={lan}>{lan}</a>
-            </p>
-          )}
           <TunnelBanner />
         </div>
       </section>
@@ -308,26 +302,14 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
                       )}
                     </td>
                     <td className="recent-actions">
-                      {confirmDelete === b.id ? (
-                        <span className="confirm">
-                          Supprimer pour tout le monde ?
-                          <button className="btn danger small" onClick={() => remove(b.id)}>
-                            Supprimer
-                          </button>
-                          <button className="btn ghost small" onClick={() => setConfirmDelete(null)}>
-                            Annuler
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          className="icon-btn subtle"
-                          onClick={() => setConfirmDelete(b.id)}
-                          aria-label={`Supprimer ${b.name}`}
-                          title="Supprimer"
-                        >
-                          <Icon.Trash />
-                        </button>
-                      )}
+                      <button
+                        className="icon-btn subtle"
+                        onClick={() => setConfirmDelete(b.id)}
+                        aria-label={`Supprimer ${b.name}`}
+                        title="Supprimer"
+                      >
+                        <Icon.Trash />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -336,6 +318,57 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
           </div>
         )}
       </section>
+
+      {toDelete && (
+        <ConfirmDelete board={toDelete} onCancel={() => setConfirmDelete(null)} onConfirm={() => remove(toDelete.id)} />
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Fenêtre de confirmation de suppression                              */
+/* ------------------------------------------------------------------ */
+
+function ConfirmDelete({ board, onCancel, onConfirm }: { board: BoardSummary; onCancel: () => void; onConfirm: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
+  const people = board.people?.length ?? 0
+
+  return (
+    <div className="backdrop" onPointerDown={(e) => e.target === e.currentTarget && onCancel()}>
+      <div className="dialog confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-desc">
+        <span className="confirm-icon" aria-hidden="true">
+          <Icon.Trash />
+        </span>
+        <h2 id="del-title">Supprimer « {board.name} » ?</h2>
+        <p id="del-desc" className="muted">
+          Ce board et ses {board.count} élément{board.count > 1 ? 's' : ''} seront supprimés pour tout le monde. Cette action est
+          définitive.
+          {people > 0 && ` ${people} personne${people > 1 ? 's sont connectées' : ' est connectée'} dessus et ${people > 1 ? 'seront déconnectées' : 'sera déconnectée'}.`}
+        </p>
+        <div className="dialog-actions">
+          <button className="btn ghost" onClick={onCancel} autoFocus>
+            Annuler
+          </button>
+          <button
+            className="btn danger"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true)
+              await onConfirm()
+            }}
+          >
+            {busy ? 'Suppression…' : 'Supprimer le board'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

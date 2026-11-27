@@ -601,16 +601,7 @@ input[type='text']:focus {
   background: color-mix(in srgb, var(--c-grey) 16%, var(--panel));
 }
 
-.lan-hint {
-  margin: 22px 0 0;
-  font-size: 14px;
-  color: var(--muted);
-}
 
-.lan-hint a {
-  color: var(--accent);
-  font-weight: 650;
-}
 
 /* boards récents */
 .home-recent {
@@ -1762,4 +1753,25 @@ svg.el {
   gap: 12px;
   min-height: 56px;
   border-bottom: 1px solid var(--line);
+}
+
+/* fenêtre de confirmation */
+.confirm-dialog h2 {
+  margin-top: 16px;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.confirm-dialog p {
+  line-height: 1.5;
+}
+
+.confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
