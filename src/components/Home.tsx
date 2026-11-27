@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import type { BoardSummary, NoteColor, UserInfo } from '../lib/types'
 import { initials } from '../lib/user'
@@ -340,12 +340,23 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
   )
 }
 
+/** Logo de Postri : version simplifiée de l'icône de l'application (build/icon-small.svg) */
 export function Logo({ size = 28 }: { size?: number }) {
+  const id = useId()
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect x="3" y="5" width="20" height="20" rx="3" fill="var(--n-lemon)" transform="rotate(-6 13 15)" />
-      <rect x="9" y="8" width="20" height="20" rx="3" fill="var(--c-cobalt)" />
-      <path d="M14 18h10M14 22h6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#4A72FF" />
+          <stop offset="1" stopColor="#1F3FCC" />
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="60" height="60" rx="14" fill={`url(#${CSS.escape(id)})`} />
+      <rect x="9" y="12" width="46" height="40" rx="7" fill="#F7F8FB" />
+      <rect x="13" y="16" width="16" height="16" rx="2.5" fill="#FFDA5C" />
+      <rect x="15" y="36" width="12" height="12" rx="2" fill="#FF9FC0" />
+      <path d="M30 23 C36 23 39 26 41 30" fill="none" stroke="#1B2230" strokeWidth="2.6" strokeLinecap="round" />
+      <rect x="33" y="31" width="18" height="13" rx="3.5" fill="#E3EAFF" stroke="#2F5BFF" strokeWidth="2.6" />
     </svg>
   )
 }

@@ -99,6 +99,8 @@ server/index.js           serveur HTTP + WebSocket (synchro Yjs, présence, sauv
 server/templates.js       contenu de départ des modèles (Speedboat, Kanban, Brainstorm, architecture)
 server/share.js           lien public sur Internet (tunnel Cloudflare)
 electron/main.js          application de bureau : démarre le serveur et ouvre la fenêtre
+build/icon.svg            icône de l'application (source) ; icon.png et icon.ico en sont tirés
+build/icon-small.svg      version simplifiée pour les petites tailles (16 à 32 px, favicon, logo)
 site/                     landing page (GitHub Pages)
 .github/workflows/        publication de la landing page et de l'installeur Windows
 src/App.tsx               routes (#/ accueil, #/b/<id> board) et profil

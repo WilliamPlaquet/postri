@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4A72FF"/>
+      <stop offset="1" stop-color="#1F3FCC"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse" x="6" y="6">
+      <circle cx="13" cy="13" r="2" fill="#CBD2DD"/>
+    </pattern>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#0B1A66" flood-opacity="0.45"/>
+    </filter>
+    <filter id="sh2" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#1B2230" flood-opacity="0.25"/>
+    </filter>
+    <marker id="head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M1 1 L8 5 L1 9" fill="none" stroke="#1B2230" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#gloss)"/>
+  <!-- le board -->
+  <g filter="url(#sh)">
+    <rect x="82" y="104" width="348" height="304" rx="34" fill="#F7F8FB"/>
+  </g>
+  <rect x="82" y="104" width="348" height="304" rx="34" fill="url(#dots)"/>
+  <!-- post-its -->
+  <g filter="url(#sh2)">
+    <g transform="rotate(-6 165 190)"><rect x="112" y="136" width="108" height="108" rx="10" fill="#FFDA5C"/></g>
+    <rect x="134" y="174" width="62" height="12" rx="6" fill="#1B2230" opacity="0.55" transform="rotate(-6 165 190)"/>
+    <rect x="134" y="198" width="42" height="12" rx="6" fill="#1B2230" opacity="0.35" transform="rotate(-6 165 190)"/>
+    <g transform="rotate(4 180 320)"><rect x="132" y="272" width="96" height="96" rx="10" fill="#FF9FC0"/></g>
+  </g>
+  <!-- forme reliée par une flèche -->
+  <path d="M226 196 C 268 196, 286 220, 300 244" fill="none" stroke="#1B2230" stroke-width="9" stroke-linecap="round" marker-end="url(#head)"/>
+  <rect x="270" y="262" width="126" height="84" rx="18" fill="#E3EAFF" stroke="#2F5BFF" stroke-width="9"/>
+  <!-- curseur -->
+  <g filter="url(#sh2)" transform="translate(352 140)">
+    <path d="M0 0 L56 29 L31 36 L19 62 Z" fill="#12B76A" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"/>
+  </g>
+</svg>
