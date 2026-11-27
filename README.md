@@ -52,11 +52,10 @@ Dans l'application, les boards sont enregistrés dans `%APPDATA%\Postri\data`.
 
 La landing page est dans `site/` : une page statique, sans serveur.
 
-1. Déplace les deux fichiers de `ci/github-workflows/` dans un dossier `.github/workflows/` à la racine du projet (GitHub ne lit les workflows qu'à cet endroit).
-2. Crée un dépôt GitHub et pousse le projet sur la branche `main`.
-3. Dans `site/index.html`, remplace `TON-PSEUDO/postri` (attribut `data-repo`) par ton dépôt.
-4. Dans le dépôt GitHub : **Settings › Pages › Source : GitHub Actions**. Le workflow `Landing page` publie `site/` à chaque push.
-5. Pour publier une version de l'application : `git tag v1.0.0` puis `git push origin v1.0.0`. Le workflow `Release Windows` fabrique `Postri-Setup.exe` sur une machine Windows de GitHub et l'ajoute à la Release. Le bouton « Télécharger » de la landing page pointe toujours vers la dernière version.
+Le dépôt est [PlaquetWilliam/postri](https://github.com/PlaquetWilliam/postri) et la page est publiée sur https://plaquetwilliam.github.io/postri/.
+
+1. Dans le dépôt GitHub : **Settings › Pages › Source : GitHub Actions**. Le workflow `Landing page` publie `site/` à chaque push.
+2. Pour publier une version de l'application : `git tag v1.0.0` puis `git push origin v1.0.0`. Le workflow `Release Windows` fabrique `Postri-Setup.exe` sur une machine Windows de GitHub et l'ajoute à la Release. Le bouton « Télécharger » de la landing page pointe toujours vers la dernière version.
 
 ## Où sont les données ?
 
@@ -92,7 +91,7 @@ server/templates.js       contenu de départ des modèles (Speedboat, Kanban, Br
 server/share.js           partage sur Internet (tunnel Cloudflare) et code d'accès
 electron/main.js          application de bureau : démarre le serveur et ouvre la fenêtre
 site/                     landing page (GitHub Pages)
-ci/github-workflows/      workflows GitHub (à déplacer dans .github/workflows/)
+.github/workflows/        publication de la landing page et de l'installeur Windows
 src/App.tsx               routes (#/ accueil, #/b/<id> board) et profil
 src/components/Home.tsx   liste et création des boards
 src/components/Board.tsx  canevas : outils, glisser, redimensionner, clavier, copier-coller

@@ -35,6 +35,11 @@
   },
   "main": "electron/main.js",
   "author": "William Plaquet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PlaquetWilliam/postri.git"
+  },
+  "homepage": "https://plaquetwilliam.github.io/postri/",
   "build": {
     "appId": "fr.postri.app",
     "productName": "Postri",
