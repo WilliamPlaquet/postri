@@ -22,7 +22,7 @@ export async function fetchSession(): Promise<Session> {
 }
 
 /* ------------------------------------------------------------------ */
-/* Partage sur Internet (tunnel) — PC qui héberge uniquement           */
+/* Partage sur Internet (tunnel), PC qui héberge uniquement           */
 /* ------------------------------------------------------------------ */
 
 export type ShareStatus = 'off' | 'downloading' | 'starting' | 'on' | 'error'
@@ -71,7 +71,7 @@ export function useShare(enabled: boolean) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Code d'accès d'un board — PC qui héberge uniquement                 */
+/* Code d'accès d'un board, PC qui héberge uniquement                 */
 /* ------------------------------------------------------------------ */
 
 export function useInviteCode(boardId: string, enabled: boolean) {

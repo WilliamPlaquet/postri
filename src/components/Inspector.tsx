@@ -21,7 +21,7 @@ const FILLS: { value: FillMode; label: string }[] = [
 const HEADS: { value: ArrowHeads; label: string }[] = [
   { value: 'end', label: '→' },
   { value: 'both', label: '↔' },
-  { value: 'none', label: '—' },
+  { value: 'none', label: 'Aucune' },
 ]
 
 const isShape = (e: BoardElement) => e.type === 'rect' || e.type === 'ellipse' || e.type === 'diamond'

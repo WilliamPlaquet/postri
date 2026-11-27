@@ -19,7 +19,7 @@ function useCopied() {
 /* Inviter sur un board (PC qui héberge)                               */
 /* ------------------------------------------------------------------ */
 
-export function BoardInvite({ boardId, boardName }: { boardId: string; boardName: string }) {
+export function BoardInvite({ boardId }: { boardId: string }) {
   const path = `/#/b/${boardId}`
   const { code, renew } = useInviteCode(boardId, true)
   const lan = useLanUrl(path)
@@ -27,15 +27,6 @@ export function BoardInvite({ boardId, boardName }: { boardId: string; boardName
   const publicLink = tunnel.state.status === 'on' && tunnel.state.url ? tunnel.state.url + path : null
   const { copied, copy } = useCopied()
   const [confirmRenew, setConfirmRenew] = useState(false)
-
-  const invitation = [
-    `Rejoins le board « ${boardName || 'Board sans titre'} » sur Postri.`,
-    publicLink && `Depuis n’importe où : ${publicLink}`,
-    lan && `${publicLink ? 'Sur le même réseau' : 'Lien'} : ${lan}`,
-    `Code d’accès : ${code ?? '…'}`,
-  ]
-    .filter(Boolean)
-    .join('\n')
 
   return (
     <div className="invite">
@@ -105,13 +96,13 @@ export function BoardInvite({ boardId, boardName }: { boardId: string; boardName
         )}
       </div>
 
-      <button className="btn primary small invite-copy" onClick={() => copy('invite', invitation)} disabled={!code}>
-        {copied === 'invite' ? (
+      <button className="btn primary small invite-copy" onClick={() => code && copy('code', code)} disabled={!code}>
+        {copied === 'code' ? (
           <>
-            <Icon.Check /> Invitation copiée
+            <Icon.Check /> Code copié
           </>
         ) : (
-          'Copier l’invitation (liens et code)'
+          'Copier le code'
         )}
       </button>
     </div>

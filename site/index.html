@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Postri — le board de ton équipe, hébergé sur ton PC</title>
+  <title>Postri, le board de ton équipe hébergé sur ton PC</title>
   <meta name="description" content="Post-its, formes et flèches en temps réel. Installe Postri, envoie le lien : tes collègues te rejoignent depuis leur navigateur. Sans compte ni abonnement.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <meta property="og:title" content="Postri — le board de ton équipe, hébergé sur ton PC">
+  <meta property="og:title" content="Postri, le board de ton équipe hébergé sur ton PC">
   <meta property="og:description" content="Post-its, formes et flèches en temps réel, sans compte ni abonnement.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://plaquetwilliam.github.io/postri/">
@@ -77,18 +77,26 @@
     .n2 { right: 4%; top: 70px; width: 190px; height: 170px; background: var(--mint); transform: rotate(4deg); }
     .n3 { left: 8%; bottom: 40px; width: 170px; height: 150px; background: var(--pink); transform: rotate(3deg); }
     .shape { right: 9%; bottom: 60px; width: 210px; height: 96px; border: 2px solid var(--accent); border-radius: 12px; background: #e4eaff; display: grid; place-items: center; font-size: 17px; font-weight: 600; }
-    .cursor { display: flex; align-items: flex-start; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)); animation: drift 7s ease-in-out infinite alternate; }
+    .cursor { z-index: 2; display: flex; align-items: flex-start; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)); animation: drift 7s ease-in-out infinite alternate; }
     .cursor span { margin: 14px 0 0 -2px; padding: 2px 9px 3px; border-radius: 4px 999px 999px 999px; color: #fff; font-size: 13px; font-weight: 620; }
-    .c1 { left: 24%; top: 250px; color: #e5484d; }
+    .c1 { left: 15%; top: 330px; color: #e5484d; }
     .c1 span { background: #e5484d; }
-    .c2 { right: 23%; top: 330px; color: #2b9a5e; animation-duration: 9s; animation-direction: alternate-reverse; }
+    .c2 { right: 11%; top: 420px; color: #2b9a5e; animation-duration: 9s; animation-direction: alternate-reverse; }
     .c2 span { background: #2b9a5e; }
     @keyframes drift {
       from { transform: translate(0, 0); }
       to { transform: translate(38px, 22px); }
     }
 
-    .hero-copy { position: relative; max-width: 720px; margin: 0 auto; text-align: center; }
+    .hero-copy { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; text-align: center; }
+    /* éclaircit la grille de points derrière le texte pour qu'il reste lisible */
+    .hero-copy::before {
+      content: '';
+      position: absolute;
+      inset: -48px -72px;
+      z-index: -1;
+      background: radial-gradient(closest-side, var(--canvas) 72%, rgba(241, 243, 246, 0));
+    }
     h1 {
       margin: 0;
       font-size: clamp(46px, 6.2vw, 78px);
@@ -98,7 +106,7 @@
       font-variation-settings: 'wdth' 82, 'opsz' 96;
       text-wrap: balance;
     }
-    .lead { margin: 24px auto 0; max-width: 52ch; font-size: 19px; line-height: 1.5; color: var(--muted); }
+    .lead { margin: 24px auto 0; max-width: 52ch; font-size: 20px; line-height: 1.5; font-weight: 500; color: #2c3446; }
     .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 34px; }
     .btn-dl {
       height: 56px;
@@ -116,7 +124,7 @@
     }
     .btn-dl:hover { background: var(--accent-dark); color: #fff; }
     .btn-dl:active { transform: translateY(1px); }
-    .fine { margin: 14px 0 0; font-size: 14px; color: var(--soft); }
+    .fine { margin: 14px 0 0; font-size: 14px; color: #4a5468; }
 
     /* ---------- capture ---------- */
     .shot { padding-top: 80px; }
@@ -142,8 +150,8 @@
     details { padding: 20px 0; border-bottom: 1px solid var(--line); }
     summary { cursor: pointer; font-size: 19px; font-weight: 680; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
     summary::-webkit-details-marker { display: none; }
-    summary::after { content: '+'; font-weight: 500; font-size: 24px; line-height: 1; color: var(--soft); }
-    details[open] summary::after { content: '–'; }
+    summary::after { content: '+'; font-weight: 500; font-size: 24px; line-height: 1; color: var(--soft); transition: transform 0.15s; }
+    details[open] summary::after { transform: rotate(45deg); }
     details p { margin: 10px 0 0; font-size: 16px; line-height: 1.55; color: var(--muted); max-width: 68ch; }
 
     .closing { text-align: center; }

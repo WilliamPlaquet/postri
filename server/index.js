@@ -1,4 +1,4 @@
-// Postri — serveur collaboratif
+// Postri : serveur collaboratif
 // - Sert l'application compilée (dossier dist/)
 // - Synchronise les boards en temps réel (Yjs sur WebSocket, chemin /ws/<id>)
 // - Sauvegarde chaque board dans data/<id>.bin et l'index dans data/boards.json

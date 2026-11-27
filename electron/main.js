@@ -1,4 +1,4 @@
-// Postri — application de bureau
+// Postri : application de bureau
 // Démarre le serveur Postri dans l'application puis l'affiche dans une fenêtre.
 // Les boards sont enregistrés dans le dossier de données de l'utilisateur
 // (Windows : %APPDATA%\Postri\data).

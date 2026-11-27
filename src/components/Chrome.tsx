@@ -121,7 +121,7 @@ export function TopBar(props: TopBarProps) {
             </button>
           ))}
           {peers.length > shown.length && <span className="avatar more">+{peers.length - shown.length}</span>}
-          <button className="avatar me-avatar" style={{ background: user.color }} title={`${user.name} (toi) — modifier`} onClick={props.onEditUser}>
+          <button className="avatar me-avatar" style={{ background: user.color }} title={`${user.name} (toi) : modifier ton profil`} onClick={props.onEditUser}>
             {initials(user.name)}
           </button>
         </div>
@@ -143,7 +143,7 @@ export function TopBar(props: TopBarProps) {
           <div className="popover share-pop">
             <h3>Inviter sur ce board</h3>
             {session.host ? (
-              <BoardInvite boardId={props.boardId} boardName={name} />
+              <BoardInvite boardId={props.boardId} />
             ) : (
               <>
                 <p className="muted">Envoie ce lien avec le code d’accès que tu as reçu : il n’ouvre que ce board.</p>

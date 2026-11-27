@@ -2,7 +2,7 @@
   "name": "postri",
   "private": true,
   "version": "1.1.0",
-  "description": "Postri — board collaboratif en temps réel (post-its, formes, flèches, texte), hébergé sur ton PC",
+  "description": "Postri : board collaboratif en temps réel (post-its, formes, flèches, texte), hébergé sur ton PC",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n serveur,web -c blue,magenta \"node --watch server/index.js\" \"vite\"",
