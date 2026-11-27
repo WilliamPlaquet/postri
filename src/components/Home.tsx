@@ -379,25 +379,19 @@ export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" aria-hidden="true">
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#DDE8FF" />
-          <stop offset="1" stopColor="#A9BFFF" />
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#4A72FF" />
+          <stop offset="1" stopColor="#1F3FCC" />
         </linearGradient>
       </defs>
       <rect x="16" y="16" width="480" height="480" rx="112" fill={`url(#${CSS.escape(id)})`} />
-      <rect x="22" y="22" width="468" height="468" rx="106" fill="none" stroke="#1B2230" strokeOpacity="0.16" strokeWidth="12" />
-      <path d="M48 232 L256 352 L256 386 L48 266 Z" fill="#C2CBDB" />
-      <path d="M256 352 L464 232 L464 266 L256 386 Z" fill="#A3AEC3" />
-      <g transform="matrix(0.866 0.5 -0.866 0.5 256 112)">
-        <rect x="0" y="0" width="240" height="240" rx="16" fill="#FFFFFF" />
-        <rect x="26" y="26" width="104" height="104" rx="8" fill="#1B2230" opacity="0.14" />
-        <rect x="152" y="36" width="80" height="80" rx="8" fill="#1B2230" opacity="0.14" />
-        <rect x="40" y="152" width="80" height="80" rx="8" fill="#1B2230" opacity="0.14" />
-      </g>
-      <g transform="translate(0 -26) matrix(0.866 0.5 -0.866 0.5 256 112)">
-        <rect x="18" y="18" width="104" height="104" rx="8" fill="#FFD43B" />
-        <rect x="144" y="28" width="80" height="80" rx="8" fill="#FF7FAB" />
-        <rect x="32" y="144" width="80" height="80" rx="8" fill="#5FCB86" />
+      <rect x="92" y="92" width="152" height="152" rx="22" fill="#FFDA5C" />
+      <rect x="92" y="268" width="152" height="152" rx="22" fill="#9FE3B6" />
+      <rect x="268" y="268" width="152" height="152" rx="22" fill="#FF9FC0" />
+      <g transform="rotate(9 344 168)">
+        <rect x="276" y="80" width="152" height="152" rx="22" fill="#0B1A66" opacity="0.35" transform="translate(6 14)" />
+        <path d="M298 80 H406 a22 22 0 0 1 22 22 V184 L380 232 H298 a22 22 0 0 1 -22 -22 V102 a22 22 0 0 1 22 -22 Z" fill="#B8DBFF" />
+        <path d="M428 184 L380 232 V200 a16 16 0 0 1 16 -16 Z" fill="#86B8EE" />
       </g>
     </svg>
   )
