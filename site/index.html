@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Postri — le board de ton équipe, hébergé sur ton PC</title>
+  <meta name="description" content="Post-its, formes et flèches en temps réel. Installe Postri, envoie le lien : tes collègues te rejoignent depuis leur navigateur. Sans compte ni abonnement.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta property="og:title" content="Postri — le board de ton équipe, hébergé sur ton PC">
+  <meta property="og:description" content="Post-its, formes et flèches en temps réel, sans compte ni abonnement.">
+  <meta property="og:image" content="assets/board.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap">
+  <style>
+    :root {
+      --ink: #1b2230;
+      --muted: #4a5468;
+      --soft: #5e6779;
+      --line: #e0e4ea;
+      --canvas: #f1f3f6;
+      --dot: #c5ccd6;
+      --accent: #2f5bff;
+      --accent-dark: #1f44d6;
+      --lemon: #ffe37d;
+      --mint: #b5edc8;
+      --pink: #ffbbd4;
+      --sky: #b8dbff;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); }
+    a:hover { color: var(--accent-dark); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+    /* ---------- haut de page ---------- */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background-color: var(--canvas);
+      background-image: radial-gradient(circle, var(--dot) 1px, transparent 1.3px);
+      background-size: 24px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 22px; padding-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 760; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+    .nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; font-size: 15px; font-weight: 560; }
+    .nav-links a { color: var(--ink); text-decoration: none; }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links .nav-cta { height: 40px; padding: 0 16px; border-radius: 10px; background: var(--ink); color: #fff; display: inline-flex; align-items: center; }
+    .nav-links .nav-cta:hover { background: #2c3546; color: #fff; }
+
+    .hero-stage { position: relative; min-height: 620px; padding-top: 72px; padding-bottom: 96px; }
+    .deco { position: absolute; pointer-events: none; }
+    .note {
+      border-radius: 3px 3px 16px 3px;
+      padding: 18px;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.3;
+      box-shadow: 0 1px 1px rgba(30, 24, 0, 0.08), 0 14px 22px -14px rgba(30, 24, 0, 0.5);
+    }
+    .n1 { left: 3%; top: 40px; width: 190px; height: 170px; background: var(--lemon); transform: rotate(-5deg); }
+    .n2 { right: 4%; top: 70px; width: 190px; height: 170px; background: var(--mint); transform: rotate(4deg); }
+    .n3 { left: 8%; bottom: 40px; width: 170px; height: 150px; background: var(--pink); transform: rotate(3deg); }
+    .shape { right: 9%; bottom: 60px; width: 210px; height: 96px; border: 2px solid var(--accent); border-radius: 12px; background: #e4eaff; display: grid; place-items: center; font-size: 17px; font-weight: 600; }
+    .cursor { display: flex; align-items: flex-start; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)); animation: drift 7s ease-in-out infinite alternate; }
+    .cursor span { margin: 14px 0 0 -2px; padding: 2px 9px 3px; border-radius: 4px 999px 999px 999px; color: #fff; font-size: 13px; font-weight: 620; }
+    .c1 { left: 24%; top: 250px; color: #e5484d; }
+    .c1 span { background: #e5484d; }
+    .c2 { right: 23%; top: 330px; color: #2b9a5e; animation-duration: 9s; animation-direction: alternate-reverse; }
+    .c2 span { background: #2b9a5e; }
+    @keyframes drift {
+      from { transform: translate(0, 0); }
+      to { transform: translate(38px, 22px); }
+    }
+
+    .hero-copy { position: relative; max-width: 720px; margin: 0 auto; text-align: center; }
+    h1 {
+      margin: 0;
+      font-size: clamp(46px, 6.2vw, 78px);
+      line-height: 0.98;
+      font-weight: 790;
+      letter-spacing: -0.03em;
+      font-variation-settings: 'wdth' 82, 'opsz' 96;
+      text-wrap: balance;
+    }
+    .lead { margin: 24px auto 0; max-width: 52ch; font-size: 19px; line-height: 1.5; color: var(--muted); }
+    .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 34px; }
+    .btn-dl {
+      height: 56px;
+      padding: 0 26px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 680;
+      transition: background-color 0.15s, transform 0.15s;
+    }
+    .btn-dl:hover { background: var(--accent-dark); color: #fff; }
+    .btn-dl:active { transform: translateY(1px); }
+    .fine { margin: 14px 0 0; font-size: 14px; color: var(--soft); }
+
+    /* ---------- capture ---------- */
+    .shot { padding-top: 80px; }
+    .shot figure { margin: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 60px -30px rgba(22, 30, 48, 0.35); }
+    .shot img { display: block; width: 100%; height: auto; }
+
+    /* ---------- sections ---------- */
+    section.block { padding-top: 104px; }
+    h2 { margin: 0; font-size: clamp(32px, 4vw, 44px); line-height: 1.05; font-weight: 760; letter-spacing: -0.02em; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 40px; margin-top: 44px; }
+    .features h3 { margin: 16px 0 0; font-size: 20px; font-weight: 700; }
+    .features p { margin: 8px 0 0; font-size: 16px; line-height: 1.5; color: var(--muted); }
+    .mark { display: block; width: 36px; height: 36px; }
+
+    .steps-panel { border-radius: 24px; background: var(--ink); color: #fff; padding: 56px; }
+    .steps { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
+    .steps .num { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--ink); font-weight: 760; }
+    .steps h3 { margin: 16px 0 0; font-size: 21px; font-weight: 700; }
+    .steps p { margin: 8px 0 0; font-size: 16px; line-height: 1.5; color: #c9d0dc; }
+
+    .faq { max-width: 860px; margin: 0 auto; }
+    .faq-list { margin-top: 28px; border-top: 1px solid var(--line); }
+    details { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    summary { cursor: pointer; font-size: 19px; font-weight: 680; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; font-weight: 500; font-size: 24px; line-height: 1; color: var(--soft); }
+    details[open] summary::after { content: '–'; }
+    details p { margin: 10px 0 0; font-size: 16px; line-height: 1.55; color: var(--muted); max-width: 68ch; }
+
+    .closing { text-align: center; }
+    .closing p { margin: 14px 0 0; color: var(--muted); font-size: 17px; }
+
+    footer { margin-top: 104px; border-top: 1px solid var(--line); }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-top: 32px; padding-bottom: 40px; font-size: 14px; color: var(--soft); }
+    footer nav { display: flex; gap: 20px; }
+
+    /* ---------- petits écrans ---------- */
+    @media (max-width: 900px) {
+      .deco { display: none; }
+      .hero-stage { min-height: 0; padding-top: 40px; padding-bottom: 64px; }
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 0 18px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .steps-panel { padding: 32px 24px; border-radius: 18px; }
+      section.block { padding-top: 72px; }
+      .shot { padding-top: 48px; }
+      .btn-dl { width: 100%; justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .cursor { animation: none; }
+    }
+  </style>
+</head>
+<!--
+  Pour brancher le bouton de téléchargement sur ton dépôt GitHub :
+  remplace TON-PSEUDO/postri ci-dessous par ton dépôt (ex. williamplaquet/postri).
+  Le bouton pointe alors vers la dernière version publiée dans les Releases.
+-->
+<body data-repo="TON-PSEUDO/postri">
+
+  <header class="hero">
+    <div class="wrap nav">
+      <a class="brand" href="#">
+        <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="20" height="20" rx="3" fill="#FFE37D" transform="rotate(-6 13 15)"/><rect x="9" y="8" width="20" height="20" rx="3" fill="#2F5BFF"/><path d="M14 18h10M14 22h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Postri
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#fonctions">Fonctions</a>
+        <a href="#partage">Partager un board</a>
+        <a href="#faq">Questions</a>
+        <a class="nav-cta" href="#telecharger">Télécharger</a>
+      </nav>
+    </div>
+
+    <div class="wrap hero-stage">
+      <div class="deco note n1" aria-hidden="true">Ce qui nous freine : les tests manuels</div>
+      <div class="deco note n2" aria-hidden="true">Objectif : livrer chaque semaine</div>
+      <div class="deco note n3" aria-hidden="true"></div>
+      <div class="deco shape" aria-hidden="true">Pipeline CI</div>
+      <div class="deco cursor c1" aria-hidden="true">
+        <svg width="18" height="20" viewBox="0 0 18 20"><path d="M1.5 1.5l14 8-6.3 1.6L6 18.5 1.5 1.5z" fill="currentColor" stroke="#fff" stroke-width="1.5"/></svg>
+        <span>Lenny</span>
+      </div>
+      <div class="deco cursor c2" aria-hidden="true">
+        <svg width="18" height="20" viewBox="0 0 18 20"><path d="M1.5 1.5l14 8-6.3 1.6L6 18.5 1.5 1.5z" fill="currentColor" stroke="#fff" stroke-width="1.5"/></svg>
+        <span>Sarah</span>
+      </div>
+
+      <div class="hero-copy">
+        <h1>Le board de ton équipe, hébergé sur ton PC.</h1>
+        <p class="lead">Post-its, formes et flèches en temps réel. Tu lances Postri, tu envoies le lien, tes collègues te rejoignent depuis leur navigateur. Pas de compte, pas d’abonnement, pas de serveur à louer.</p>
+        <div class="cta-row" id="telecharger">
+          <a class="btn-dl" data-download href="#">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>
+            Télécharger pour Windows
+          </a>
+        </div>
+        <p class="fine">Windows 10 et 11, version 1.0. Gratuit.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap shot">
+      <figure>
+        <img src="assets/board.jpg" width="1920" height="1200" alt="Un board Postri « Rétro sprint 5 » : des post-its dans les zones du modèle Speedboat, avec les curseurs de Lenny et Sarah en direct">
+      </figure>
+    </div>
+
+    <section class="wrap block" id="fonctions">
+      <h2>Tout ce qu’il faut pour réfléchir à plusieurs</h2>
+      <div class="features">
+        <div>
+          <span class="mark" style="background: var(--lemon); border-radius: 3px 3px 10px 3px" aria-hidden="true"></span>
+          <h3>Post-its, formes, flèches</h3>
+          <p>Sept couleurs de post-its, rectangles, ellipses, losanges, texte libre et crayon. Les flèches s’accrochent aux formes et les suivent.</p>
+        </div>
+        <div>
+          <span class="mark" style="background: #e5484d; border-radius: 50%" aria-hidden="true"></span>
+          <h3>Tout le monde en direct</h3>
+          <p>Chacun voit les curseurs, les sélections et ce que les autres écrivent, à l’instant où ça arrive.</p>
+        </div>
+        <div>
+          <span class="mark" style="border: 3px solid var(--ink); border-radius: 8px" aria-hidden="true"></span>
+          <h3>Des modèles pour démarrer</h3>
+          <p>Rétro Speedboat, Kanban, Brainstorm, schéma d’architecture, ou un board vide.</p>
+        </div>
+        <div>
+          <span class="mark" style="background: var(--sky); border-radius: 8px" aria-hidden="true"></span>
+          <h3>Tes données restent chez toi</h3>
+          <p>Les boards sont enregistrés sur ton ordinateur, à chaque modification. Tu peux aussi les exporter en JSON.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap block" id="partage">
+      <div class="steps-panel">
+        <h2>Partager un board en trois étapes</h2>
+        <ol class="steps">
+          <li>
+            <span class="num" style="background: var(--lemon)">1</span>
+            <h3>Installe Postri</h3>
+            <p>Une seule personne l’installe : c’est son PC qui accueille les boards.</p>
+          </li>
+          <li>
+            <span class="num" style="background: var(--mint)">2</span>
+            <h3>Clique sur « Partager sur Internet »</h3>
+            <p>Postri ouvre un tunnel sécurisé et te donne un lien public en https, avec un code d’accès.</p>
+          </li>
+          <li>
+            <span class="num" style="background: var(--sky)">3</span>
+            <h3>Envoie le lien et le code</h3>
+            <p>Tes collègues ouvrent le lien dans leur navigateur, sans rien installer. Il fonctionne tant que Postri est ouvert.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="wrap block faq" id="faq">
+      <h2>Questions fréquentes</h2>
+      <div class="faq-list">
+        <details open>
+          <summary>Les invités doivent-ils installer Postri ?</summary>
+          <p>Non. Seule la personne qui héberge l’installe. Les autres ouvrent le lien dans Chrome, Firefox, Edge ou Safari.</p>
+        </details>
+        <details>
+          <summary>Qui peut ouvrir mes boards ?</summary>
+          <p>Seules les personnes qui ont le lien et le code d’accès à 6 caractères que Postri affiche. Tu peux générer un nouveau code à tout moment : les invités déjà connectés devront alors le saisir.</p>
+        </details>
+        <details>
+          <summary>Que se passe-t-il si j’éteins mon PC ?</summary>
+          <p>Le lien ne répond plus, mais rien n’est perdu : tout est enregistré. Au prochain partage, Postri donne un nouveau lien et un nouveau code.</p>
+        </details>
+        <details>
+          <summary>Est-ce que ça marche sans Internet ?</summary>
+          <p>Oui, sur ton réseau local : les postes connectés au même Wi-Fi rejoignent avec l’adresse locale affichée dans Postri.</p>
+        </details>
+        <details>
+          <summary>Windows affiche un avertissement à l’installation, c’est normal ?</summary>
+          <p>Oui. Postri n’est pas signé avec un certificat payant, alors Windows SmartScreen demande confirmation. Clique sur « Informations complémentaires », puis sur « Exécuter quand même ».</p>
+        </details>
+        <details>
+          <summary>Comment fonctionne le lien public ?</summary>
+          <p>Postri utilise un tunnel Cloudflare gratuit, sans compte : ton PC se connecte à Cloudflare, qui relaie les visiteurs jusqu’à lui. Aucun port à ouvrir sur ta box.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="wrap block closing">
+      <h2>Lance ton premier board</h2>
+      <p>Installe Postri, choisis un modèle et invite ton équipe.</p>
+      <div class="cta-row">
+        <a class="btn-dl" data-download href="#">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>
+          Télécharger pour Windows
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Postri, fait par William Plaquet.</span>
+      <nav aria-label="Liens">
+        <a data-repo-link href="#">Code source sur GitHub</a>
+        <a href="#telecharger">Télécharger</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // Les boutons pointent vers la dernière version publiée sur GitHub
+    const repo = document.body.dataset.repo
+    document.querySelectorAll('[data-download]').forEach((a) => {
+      a.href = `https://github.com/${repo}/releases/latest/download/Postri-Setup.exe`
+    })
+    document.querySelectorAll('[data-repo-link]').forEach((a) => {
+      a.href = `https://github.com/${repo}`
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "name": "postri",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Postri — board collaboratif en temps réel (post-its, formes, flèches, texte), hébergé sur ton PC",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n serveur,web -c blue,magenta \"node --watch server/index.js\" \"vite\"",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "app": "vite build && electron .",
+    "dist": "vite build && electron-builder --win nsis --x64 --publish never",
+    "typecheck": "tsc --noEmit",
+    "dist:zip": "vite build && electron-builder --win zip --x64 --publish never"
+  },
+  "dependencies": {
+    "lib0": "^0.2.115",
+    "ws": "^8.18.0",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.27"
+  },
+  "devDependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.0",
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.0",
+    "y-websocket": "^3.0.0"
+  },
+  "main": "electron/main.js",
+  "author": "William Plaquet",
+  "build": {
+    "appId": "fr.postri.app",
+    "productName": "Postri",
+    "copyright": "William Plaquet",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "server/**",
+      "electron/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Postri-Setup.exe",
+      "shortcutName": "Postri",
+      "createDesktopShortcut": true
+    }
+  }
+}
