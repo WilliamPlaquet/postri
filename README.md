@@ -55,7 +55,7 @@ La landing page est dans `site/` : une page statique, sans serveur.
 Le dépôt est [PlaquetWilliam/postri](https://github.com/PlaquetWilliam/postri) et la page est publiée sur https://plaquetwilliam.github.io/postri/.
 
 1. Dans le dépôt GitHub : **Settings › Pages › Source : GitHub Actions**. Le workflow `Landing page` publie `site/` à chaque push.
-2. Pour publier une version de l'application : `git tag v1.0.0` puis `git push origin v1.0.0`. Le workflow `Release Windows` fabrique `Postri-Setup.exe` sur une machine Windows de GitHub et l'ajoute à la Release. Le bouton « Télécharger » de la landing page pointe toujours vers la dernière version.
+2. Pour publier une nouvelle version de l'application : change `"version"` dans `package.json` (par exemple `1.0.0` → `1.1.0`) et pousse sur `main`. Le workflow `Release Windows` fabrique `Postri-Setup.exe` sur une machine Windows de GitHub et crée la Release `v1.1.0`. Le bouton « Télécharger » de la landing page pointe toujours vers la dernière version.
 
 ## Où sont les données ?
 

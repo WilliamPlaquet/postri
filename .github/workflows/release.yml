@@ -1,11 +1,14 @@
-# Construit l'installeur Windows et le publie dans les Releases GitHub.
-# Déclenchement : pousser un tag de version, par exemple
-#   git tag v1.0.0
-#   git push origin v1.0.0
+# Construit l'installeur Windows et le publie dans une Release GitHub.
+#
+# Pour publier une nouvelle version : change "version" dans package.json
+# (par exemple 1.0.0 -> 1.1.0) et pousse sur main. Le workflow crée la
+# Release v1.1.0 avec Postri-Setup.exe. Pousser un tag v* fonctionne aussi.
 name: Release Windows
 
 on:
   push:
+    branches: [main]
+    paths: ['package.json', '.github/workflows/release.yml']
     tags: ['v*']
   workflow_dispatch:
 
@@ -13,7 +16,28 @@ permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      build: ${{ steps.version.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: |
+          TAG="v$(node -p "require('./package.json').version")"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          # sur main, on ne refait pas une version déjà publiée
+          if [ "$GITHUB_REF_TYPE" != "tag" ] && git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            echo "La version $TAG existe déjà : rien à publier."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +50,8 @@ jobs:
       - name: Publier dans la Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          name: Postri ${{ needs.check.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: release/Postri-Setup.exe
           generate_release_notes: true
