@@ -4,7 +4,6 @@ import { loadUser, storageGet, storageSet } from './lib/user'
 import { Home } from './components/Home'
 import { Board } from './components/Board'
 import { NameDialog } from './components/NameDialog'
-import { AccessGate } from './components/Share'
 import { SessionContext, fetchSession } from './lib/session'
 import type { Session } from './lib/session'
 
@@ -42,7 +41,6 @@ export function App() {
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
 
   if (!session) return null
-  if (session.remote && !session.authorized) return <AccessGate onAccess={() => fetchSession().then(setSession)} />
   if (!user) return <NameDialog initial={null} onSave={setUser} />
 
   return (

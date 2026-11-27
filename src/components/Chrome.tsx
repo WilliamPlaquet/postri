@@ -6,7 +6,7 @@ import { initials } from '../lib/user'
 import { useLanUrl } from '../lib/useLanUrl'
 import { Icon, ToolIcon } from './icons'
 import { Logo } from './Home'
-import { InternetShare } from './Share'
+import { BoardInvite } from './Share'
 import { useSession } from '../lib/session'
 
 /* ------------------------------------------------------------------ */
@@ -142,32 +142,28 @@ export function TopBar(props: TopBarProps) {
         {menu === 'share' && (
           <div className="popover share-pop">
             <h3>Inviter sur ce board</h3>
-            <p className="muted">
-              {session.remote
-                ? 'Envoie ce lien. Les invités devront saisir le même code d’accès que toi.'
-                : 'Sur ton réseau, tout le monde peut rejoindre avec ce lien.'}
-            </p>
-            <div className="share-row">
-              <input readOnly value={shareUrl ?? '…'} onFocus={(e) => e.currentTarget.select()} aria-label="Lien du board" />
-              <button className="btn primary small" onClick={copy}>
-                {copied ? (
-                  <>
-                    <Icon.Check /> Copié
-                  </>
-                ) : (
-                  'Copier'
-                )}
-              </button>
-            </div>
-            <p className="muted small">
+            {session.host ? (
+              <BoardInvite boardId={props.boardId} boardName={name} />
+            ) : (
+              <>
+                <p className="muted">Envoie ce lien avec le code d’accès que tu as reçu : il n’ouvre que ce board.</p>
+                <div className="share-row">
+                  <input readOnly value={shareUrl ?? '…'} onFocus={(e) => e.currentTarget.select()} aria-label="Lien du board" />
+                  <button className="btn primary small" onClick={copy}>
+                    {copied ? (
+                      <>
+                        <Icon.Check /> Copié
+                      </>
+                    ) : (
+                      'Copier'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+            <p className="muted small share-people">
               {peers.length === 0 ? 'Personne d’autre pour le moment.' : `${peers.length + 1} personnes sur le board.`}
             </p>
-            {session.host && (
-              <div className="share-internet">
-                <h3>Sur Internet</h3>
-                <InternetShare path={`/#/b/${props.boardId}`} boardName={name} />
-              </div>
-            )}
           </div>
         )}
 

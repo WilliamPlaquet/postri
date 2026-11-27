@@ -1,11 +1,10 @@
 // Partage sur Internet : ouvre un tunnel Cloudflare (Quick Tunnel, sans compte)
-// vers le serveur local et génère un code d'accès pour les invités.
+// vers le serveur local. Les codes d'accès sont gérés par board dans index.js.
 
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import crypto from 'node:crypto'
 
 const RELEASES = 'https://github.com/cloudflare/cloudflared/releases/latest/download/'
 
@@ -16,20 +15,12 @@ function binaryName() {
   return null
 }
 
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-function newCode() {
-  const bytes = crypto.randomBytes(6)
-  const chars = Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length])
-  return `${chars.slice(0, 3).join('')}-${chars.slice(3).join('')}`
-}
-
 /**
- * @param {{ binDir: string, getPort: () => number, onCodeChange?: () => void }} opts
+ * @param {{ binDir: string, getPort: () => number, onStop?: () => void }} opts
  */
-export function createShareManager({ binDir, getPort, onCodeChange }) {
-  const secret = crypto.randomBytes(32)
-  /** @type {{status:'off'|'downloading'|'starting'|'on'|'error', url:string|null, code:string|null, error:string|null}} */
-  const state = { status: 'off', url: null, code: null, error: null }
+export function createShareManager({ binDir, getPort, onStop }) {
+  /** @type {{status:'off'|'downloading'|'starting'|'on'|'error', url:string|null, error:string|null}} */
+  const state = { status: 'off', url: null, error: null }
   /** @type {import('node:child_process').ChildProcess | null} */
   let child = null
 
@@ -73,9 +64,7 @@ export function createShareManager({ binDir, getPort, onCodeChange }) {
         const m = text.match(/https:\/\/(?!api\.)[a-z0-9]+(?:-[a-z0-9]+)+\.trycloudflare\.com/i)
         if (m && child === proc && state.status !== 'on') {
           state.url = m[0]
-          state.code = newCode()
           state.status = 'on'
-          onCodeChange?.()
         }
       }
       proc.stdout.on('data', onData)
@@ -83,7 +72,7 @@ export function createShareManager({ binDir, getPort, onCodeChange }) {
       proc.on('error', (e) => {
         if (child !== proc) return
         child = null
-        Object.assign(state, { status: 'error', url: null, code: null, error: `cloudflared n'a pas pu démarrer : ${e.message}` })
+        Object.assign(state, { status: 'error', url: null, error: `cloudflared n'a pas pu démarrer : ${e.message}` })
       })
       proc.on('exit', () => {
         if (child !== proc) return
@@ -93,12 +82,11 @@ export function createShareManager({ binDir, getPort, onCodeChange }) {
         Object.assign(state, {
           status: 'error',
           url: null,
-          code: null,
           error: wasOn
             ? 'Le partage s’est interrompu (connexion à Internet perdue ?). Relance-le.'
             : `Le tunnel s'est arrêté avant d'être prêt. ${lastLine(log)}`.trim(),
         })
-        onCodeChange?.()
+        onStop?.()
       })
       // pas d'adresse au bout de 40 s : on abandonne
       setTimeout(() => {
@@ -108,7 +96,7 @@ export function createShareManager({ binDir, getPort, onCodeChange }) {
         }
       }, 40_000)
     } catch (e) {
-      Object.assign(state, { status: 'error', url: null, code: null, error: e instanceof Error ? e.message : String(e) })
+      Object.assign(state, { status: 'error', url: null, error: e instanceof Error ? e.message : String(e) })
     }
   }
 
@@ -116,37 +104,11 @@ export function createShareManager({ binDir, getPort, onCodeChange }) {
     const proc = child
     child = null
     if (proc) proc.kill()
-    Object.assign(state, { status: 'off', url: null, code: null, error: null })
-    onCodeChange?.()
+    Object.assign(state, { status: 'off', url: null, error: null })
+    onStop?.()
   }
 
-  function regenerate() {
-    if (state.status !== 'on') return
-    state.code = newCode()
-    onCodeChange?.()
-  }
-
-  /** jeton du cookie d'accès, lié au code en cours */
-  const tokenFor = (code) => crypto.createHmac('sha256', secret).update(code).digest('base64url')
-
-  return {
-    state,
-    start,
-    stop,
-    regenerate,
-    checkCode: (input) => {
-      if (state.status !== 'on' || !state.code) return null
-      const clean = String(input || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
-      const expected = state.code.replace('-', '')
-      if (clean.length !== expected.length) return null
-      return crypto.timingSafeEqual(Buffer.from(clean), Buffer.from(expected)) ? tokenFor(state.code) : null
-    },
-    isValidToken: (token) => {
-      if (state.status !== 'on' || !state.code || !token) return false
-      const expected = tokenFor(state.code)
-      return token.length === expected.length && crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
-    },
-  }
+  return { state, start, stop }
 }
 
 function lastLine(log) {

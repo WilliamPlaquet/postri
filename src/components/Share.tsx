@@ -1,71 +1,124 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { copyText, useShare } from '../lib/session'
+import { copyText, useInviteCode, useShare } from '../lib/session'
+import { useLanUrl } from '../lib/useLanUrl'
 import { Icon } from './icons'
 import { Logo } from './Home'
 
-/* ------------------------------------------------------------------ */
-/* Partager sur Internet (PC qui héberge)                              */
-/* ------------------------------------------------------------------ */
-
-export function InternetShare({ path, boardName }: { path: string; boardName?: string }) {
-  const { state, start, stop, newCode } = useShare(true)
-  const [copied, setCopied] = useState<'link' | 'invite' | null>(null)
-  const link = state.url ? state.url + path : ''
-
-  const copy = async (what: 'link' | 'invite') => {
-    await copyText(
-      what === 'link'
-        ? link
-        : `Rejoins ${boardName ? `le board « ${boardName} »` : 'mon Postri'} : ${link}\nCode d’accès : ${state.code}`,
-    )
-    setCopied(what)
+function useCopied() {
+  const [copied, setCopied] = useState<string | null>(null)
+  const copy = async (key: string, text: string) => {
+    await copyText(text)
+    setCopied(key)
     setTimeout(() => setCopied(null), 1600)
   }
+  return { copied, copy }
+}
 
-  if (state.status === 'on' && state.url && state.code) {
-    return (
-      <div className="netshare is-on">
-        <p className="netshare-status">
-          <i /> Partagé sur Internet
-        </p>
-        <label className="netshare-field">
-          <span>Lien public</span>
-          <span className="share-row">
-            <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
-            <button className="btn ghost small" onClick={() => copy('link')}>
-              {copied === 'link' ? 'Copié' : 'Copier'}
-            </button>
-          </span>
-        </label>
-        <div className="netshare-field">
-          <span>Code d’accès des invités</span>
-          <span className="netshare-code-row">
-            <strong className="netshare-code">{state.code}</strong>
-            <button className="btn ghost small" onClick={newCode} title="Les invités déjà connectés devront saisir le nouveau code">
+/* ------------------------------------------------------------------ */
+/* Inviter sur un board (PC qui héberge)                               */
+/* ------------------------------------------------------------------ */
+
+export function BoardInvite({ boardId, boardName }: { boardId: string; boardName: string }) {
+  const path = `/#/b/${boardId}`
+  const { code, renew } = useInviteCode(boardId, true)
+  const lan = useLanUrl(path)
+  const tunnel = useShare(true)
+  const publicLink = tunnel.state.status === 'on' && tunnel.state.url ? tunnel.state.url + path : null
+  const { copied, copy } = useCopied()
+  const [confirmRenew, setConfirmRenew] = useState(false)
+
+  const invitation = [
+    `Rejoins le board « ${boardName || 'Board sans titre'} » sur Postri.`,
+    publicLink && `Depuis n’importe où : ${publicLink}`,
+    lan && `${publicLink ? 'Sur le même réseau' : 'Lien'} : ${lan}`,
+    `Code d’accès : ${code ?? '…'}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  return (
+    <div className="invite">
+      <div className="invite-code">
+        <span className="invite-label">Code d’accès de ce board</span>
+        <span className="netshare-code-row">
+          <strong className="netshare-code">{code ?? '…'}</strong>
+          {confirmRenew ? (
+            <span className="confirm">
+              <button
+                className="btn danger small"
+                onClick={async () => {
+                  await renew()
+                  setConfirmRenew(false)
+                }}
+              >
+                Changer
+              </button>
+              <button className="btn ghost small" onClick={() => setConfirmRenew(false)}>
+                Annuler
+              </button>
+            </span>
+          ) : (
+            <button className="btn ghost small" onClick={() => setConfirmRenew(true)}>
               Nouveau code
             </button>
-          </span>
-        </div>
-        <div className="netshare-actions">
-          <button className="btn primary small" onClick={() => copy('invite')}>
-            {copied === 'invite' ? (
-              <>
-                <Icon.Check /> Invitation copiée
-              </>
-            ) : (
-              'Copier l’invitation'
-            )}
-          </button>
-          <button className="btn ghost small" onClick={stop}>
-            Arrêter le partage
-          </button>
-        </div>
-        <p className="muted small">Le lien fonctionne tant que Postri reste ouvert sur ce PC.</p>
+          )}
+        </span>
+        <p className="muted small">
+          {confirmRenew
+            ? 'Les invités déjà connectés devront saisir le nouveau code.'
+            : 'Ce code n’ouvre que ce board. Toi, sur ce PC, tu n’as pas besoin de le saisir.'}
+        </p>
       </div>
-    )
-  }
 
+      <div className="invite-field">
+        <span className="invite-label">Sur ton réseau</span>
+        <span className="share-row">
+          <input readOnly value={lan ?? '…'} onFocus={(e) => e.currentTarget.select()} aria-label="Lien sur le réseau local" />
+          <button className="btn ghost small" onClick={() => lan && copy('lan', lan)}>
+            {copied === 'lan' ? 'Copié' : 'Copier'}
+          </button>
+        </span>
+      </div>
+
+      <div className="invite-field">
+        <span className="invite-label">Sur Internet</span>
+        {publicLink ? (
+          <>
+            <span className="share-row">
+              <input readOnly value={publicLink} onFocus={(e) => e.currentTarget.select()} aria-label="Lien public" />
+              <button className="btn ghost small" onClick={() => copy('net', publicLink)}>
+                {copied === 'net' ? 'Copié' : 'Copier'}
+              </button>
+            </span>
+            <span className="netshare-on-row">
+              <span className="netshare-status">
+                <i /> Actif tant que Postri reste ouvert
+              </span>
+              <button className="link-btn danger-link" onClick={tunnel.stop}>
+                Arrêter
+              </button>
+            </span>
+          </>
+        ) : (
+          <TunnelStart state={tunnel.state} onStart={tunnel.start} />
+        )}
+      </div>
+
+      <button className="btn primary small invite-copy" onClick={() => copy('invite', invitation)} disabled={!code}>
+        {copied === 'invite' ? (
+          <>
+            <Icon.Check /> Invitation copiée
+          </>
+        ) : (
+          'Copier l’invitation (liens et code)'
+        )}
+      </button>
+    </div>
+  )
+}
+
+function TunnelStart({ state, onStart }: { state: ReturnType<typeof useShare>['state']; onStart: () => void }) {
   const busy = state.status === 'starting' || state.status === 'downloading'
   return (
     <div className="netshare">
@@ -74,24 +127,41 @@ export function InternetShare({ path, boardName }: { path: string; boardName?: s
       ) : (
         <p className="muted small">
           {state.status === 'downloading'
-            ? 'Préparation du partage (téléchargement de cloudflared, une seule fois)…'
+            ? 'Préparation (téléchargement de cloudflared, une seule fois)…'
             : state.status === 'starting'
-              ? 'Ouverture du tunnel…'
-              : 'Donne accès à Postri depuis n’importe où, sans hébergeur. Tes invités devront saisir un code.'}
+              ? 'Ouverture du lien public…'
+              : 'Crée un lien public pour inviter des personnes qui ne sont pas sur ton réseau.'}
         </p>
       )}
-      <button className="btn primary small" onClick={start} disabled={busy}>
+      <button className="btn ghost small" onClick={onStart} disabled={busy}>
         <Icon.Share /> {busy ? 'Ouverture…' : state.status === 'error' ? 'Réessayer' : 'Partager sur Internet'}
       </button>
     </div>
   )
 }
 
+/** Bandeau de l'accueil quand le lien public est actif (PC qui héberge) */
+export function TunnelBanner() {
+  const { state, stop } = useShare(true)
+  if (state.status !== 'on' || !state.url) return null
+  return (
+    <div className="tunnel-banner" role="status">
+      <span className="netshare-status">
+        <i /> Postri est accessible sur Internet
+      </span>
+      <span className="muted small">Chaque invité a besoin du code du board que tu partages.</span>
+      <button className="btn ghost small" onClick={stop}>
+        Arrêter le partage sur Internet
+      </button>
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ */
-/* Écran du code d'accès (invités arrivés par le lien public)          */
+/* Écran du code d'accès (invités)                                     */
 /* ------------------------------------------------------------------ */
 
-export function AccessGate({ onAccess }: { onAccess: () => void }) {
+export function AccessGate({ boardId, onAccess, onHome }: { boardId: string; onAccess: () => void; onHome: () => void }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -106,7 +176,7 @@ export function AccessGate({ onAccess }: { onAccess: () => void }) {
     setBusy(true)
     setError(null)
     try {
-      const r = await fetch('/api/access', {
+      const r = await fetch(`/api/boards/${boardId}/access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
@@ -125,7 +195,7 @@ export function AccessGate({ onAccess }: { onAccess: () => void }) {
       <form className="gate-card" onSubmit={submit}>
         <Logo size={40} />
         <h1>Entre le code d’accès</h1>
-        <p className="muted">La personne qui t’a envoyé le lien a aussi un code à 6 caractères. Il protège ses boards.</p>
+        <p className="muted">Ce board est protégé. La personne qui t’a envoyé le lien a aussi un code à 6 caractères.</p>
         <label className="field">
           <span>Code d’accès</span>
           <input
@@ -141,7 +211,10 @@ export function AccessGate({ onAccess }: { onAccess: () => void }) {
         </label>
         {error && <p className="netshare-error">{error}</p>}
         <button className="btn primary" disabled={busy || code.replace('-', '').length < 6}>
-          {busy ? 'Vérification…' : 'Entrer'}
+          {busy ? 'Vérification…' : 'Ouvrir le board'}
+        </button>
+        <button type="button" className="link-btn gate-home" onClick={onHome}>
+          Voir mes autres boards
         </button>
       </form>
     </div>

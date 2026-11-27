@@ -10,8 +10,9 @@ export default defineConfig({
     host: true, // accessible depuis les autres PC du réseau
     port: 5173,
     proxy: {
-      '/api': { target, changeOrigin: true },
-      '/ws': { target: target.replace('http', 'ws'), ws: true },
+      // xfwd : le serveur voit l'adresse d'origine et distingue l'hôte des invités
+      '/api': { target, changeOrigin: true, xfwd: true },
+      '/ws': { target: target.replace('http', 'ws'), ws: true, xfwd: true },
     },
   },
 })

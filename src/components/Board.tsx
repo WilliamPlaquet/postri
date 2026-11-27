@@ -21,6 +21,7 @@ import { ArrowView, DrawView, NoteView, ShapeView, TextView } from './ElementVie
 import { Overlay } from './Overlay'
 import { Inspector } from './Inspector'
 import { BottomBar, HelpPanel, TopBar, Toolbar } from './Chrome'
+import { AccessGate } from './Share'
 
 /* ------------------------------------------------------------------ */
 
@@ -86,18 +87,19 @@ interface Props {
 }
 
 export function Board(props: Props) {
-  const [exists, setExists] = useState<boolean | null>(null)
+  const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'locked'>('loading')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    fetch(`/api/boards/${props.boardId}`)
-      .then((r) => {
-        if (r.status === 401) location.reload()
-        setExists(r.ok)
-      })
-      .catch(() => setExists(true)) // serveur injoignable : on laisse la reconnexion faire
-  }, [props.boardId])
+    fetch(`/api/boards/${props.boardId}`, { cache: 'no-store' })
+      .then((r) => setState(r.ok ? 'ok' : r.status === 401 ? 'locked' : 'missing'))
+      .catch(() => setState('ok')) // serveur injoignable : on laisse la reconnexion faire
+  }, [props.boardId, attempt])
 
-  if (exists === false) {
+  if (state === 'locked') {
+    return <AccessGate boardId={props.boardId} onAccess={() => setAttempt((n) => n + 1)} onHome={props.onHome} />
+  }
+  if (state === 'missing') {
     return (
       <div className="notfound">
         <h1>Ce board n’existe pas</h1>
@@ -108,7 +110,7 @@ export function Board(props: Props) {
       </div>
     )
   }
-  if (exists === null) return <div className="notfound muted">Ouverture du board…</div>
+  if (state === 'loading') return <div className="notfound muted">Ouverture du board…</div>
   return <Connected {...props} />
 }
 

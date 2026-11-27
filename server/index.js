@@ -166,6 +166,7 @@ async function saveRoom(room) {
   const meta = room.doc.getMap('meta')
   const prev = index[room.id]
   index[room.id] = {
+    ...prev,
     id: room.id,
     name: String(meta.get('name') || prev?.name || 'Board sans titre'),
     createdAt: prev?.createdAt || Date.now(),
@@ -198,6 +199,7 @@ const wss = new WebSocketServer({ noServer: true })
 wss.on('connection', (conn, req, roomId) => {
   conn.binaryType = 'arraybuffer'
   conn.isRemote = isRemote(req)
+  conn.isGuest = !isHostUser(req)
   const room = getRoom(roomId)
   room.conns.set(conn, new Set())
 
@@ -313,6 +315,9 @@ function lanAddresses() {
   return out
 }
 
+/** champs d'un board montrés aux clients (jamais le code d'accès) */
+const publicBoard = (b) => ({ id: b.id, name: b.name, createdAt: b.createdAt, updatedAt: b.updatedAt, count: b.count })
+
 function listBoards() {
   // Les rooms ouvertes ont peut-être un nom plus récent que l'index
   for (const room of rooms.values()) {
@@ -323,19 +328,15 @@ function listBoards() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Partage sur Internet & code d'accès                                 */
+/* Qui peut faire quoi                                                 */
+/*                                                                     */
+/* - L'hôte (la personne devant le PC qui fait tourner Postri) peut    */
+/*   tout faire : créer, supprimer, partager, voir tous les boards.    */
+/* - Tous les autres (réseau local ou lien Internet) sont des invités : */
+/*   chaque board a son propre code d'accès, et un code n'ouvre que    */
+/*   ce board. Les invités ne créent ni ne suppriment de boards.       */
 /* ------------------------------------------------------------------ */
 
-const share = createShareManager({
-  binDir: path.join(DATA, 'bin'),
-  getPort: () => PORT,
-  // nouveau code ou partage arrêté : les invités distants doivent se reconnecter
-  onCodeChange: () => {
-    for (const room of rooms.values()) room.conns.forEach((_, c) => c.isRemote && c.close(4401, 'code expiré'))
-  },
-})
-
-const COOKIE = 'postri_access'
 const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
 
 /** requête arrivée par le tunnel Cloudflare */
@@ -346,8 +347,46 @@ function isRemote(req) {
 
 /** la personne assise devant le PC qui héberge */
 function isHostUser(req) {
-  return !isRemote(req) && LOOPBACK.has(req.socket.remoteAddress || '')
+  if (isRemote(req)) return false
+  if (!LOOPBACK.has(req.socket.remoteAddress || '')) return false
+  // en développement, Vite relaie les requêtes et indique l'adresse d'origine
+  const fwd = String(req.headers['x-forwarded-for'] || '').split(',').pop().trim()
+  return !fwd || LOOPBACK.has(fwd)
 }
+
+const clientIp = (req) =>
+  String(req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.socket.remoteAddress || '?')
+
+// Clé secrète des jetons d'accès, gardée entre deux lancements
+const SECRET_FILE = path.join(DATA, 'secret.key')
+let secret
+try {
+  secret = fs.readFileSync(SECRET_FILE)
+  if (secret.length < 32) throw new Error()
+} catch {
+  secret = crypto.randomBytes(32)
+  fs.writeFileSync(SECRET_FILE, secret, { mode: 0o600 })
+}
+
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+function newCode() {
+  const chars = Array.from(crypto.randomBytes(6), (b) => CODE_ALPHABET[b % CODE_ALPHABET.length])
+  return `${chars.slice(0, 3).join('')}-${chars.slice(3).join('')}`
+}
+
+/** code d'accès du board (créé à la première demande) */
+function boardCode(id) {
+  const entry = index[id]
+  if (!entry) return null
+  if (!entry.code) {
+    entry.code = newCode()
+    saveIndexSoon()
+  }
+  return entry.code
+}
+
+const cookieName = (id) => `postri_b_${id}`
+const tokenFor = (id, code) => crypto.createHmac('sha256', secret).update(`${id}:${code}`).digest('base64url')
 
 function readCookie(req, name) {
   const raw = String(req.headers.cookie || '')
@@ -358,11 +397,27 @@ function readCookie(req, name) {
   return ''
 }
 
-const isAuthorized = (req) => !isRemote(req) || share.isValidToken(readCookie(req, COOKIE))
+function safeEqual(a, b) {
+  return a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
+
+/** l'hôte, ou un invité qui a saisi le code de ce board */
+function canAccessBoard(req, id) {
+  if (isHostUser(req)) return true
+  const entry = index[id]
+  if (!entry || !entry.code) return false
+  return safeEqual(readCookie(req, cookieName(id)), tokenFor(id, entry.code))
+}
+
+/** déconnecte les invités d'un board (nouveau code) */
+function kickGuests(id) {
+  const room = rooms.get(id)
+  if (room) room.conns.forEach((_, c) => c.isGuest && c.close(4401, 'code changé'))
+}
 
 const attempts = new Map()
 function tooManyAttempts(req) {
-  const ip = String(req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '?')
+  const ip = clientIp(req)
   const now = Date.now()
   const a = attempts.get(ip)
   if (!a || a.reset < now) {
@@ -373,45 +428,53 @@ function tooManyAttempts(req) {
   return a.count > 8
 }
 
+/* ------------------------------------------------------------------ */
+/* Partage sur Internet (tunnel)                                       */
+/* ------------------------------------------------------------------ */
+
+const share = createShareManager({
+  binDir: path.join(DATA, 'bin'),
+  getPort: () => PORT,
+  // tunnel coupé : les invités venus par Internet sont déconnectés
+  onStop: () => {
+    for (const room of rooms.values()) room.conns.forEach((_, c) => c.isRemote && c.close(4401, 'partage arrêté'))
+  },
+})
+
+const HOST_ONLY = { error: 'Seul le PC qui héberge Postri peut faire ça.' }
+const NEED_CODE = { error: 'Code d’accès requis', needsCode: true }
+
 async function handleApi(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean) // ['api', ...]
+  const host = isHostUser(req)
 
   if (parts[1] === 'session' && req.method === 'GET') {
-    return json(res, 200, { remote: isRemote(req), authorized: isAuthorized(req), host: isHostUser(req) })
+    return json(res, 200, { host, remote: isRemote(req) })
   }
-
-  if (parts[1] === 'access' && req.method === 'POST') {
-    if (tooManyAttempts(req)) return json(res, 429, { error: 'Trop d’essais. Réessaie dans quelques minutes.' })
-    const body = await readBody(req)
-    const token = share.checkCode(body.code)
-    if (!token) return json(res, 401, { error: 'Ce code ne correspond pas. Vérifie-le auprès de la personne qui t’a invité.' })
-    res.setHeader('Set-Cookie', `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=604800`)
-    return json(res, 200, { ok: true })
-  }
-
-  if (!isAuthorized(req)) return json(res, 401, { error: 'Code d’accès requis' })
 
   if (parts[1] === 'share') {
-    if (!isHostUser(req)) return json(res, 403, { error: 'Seul le PC qui héberge peut gérer le partage.' })
+    if (!host) return json(res, 403, HOST_ONLY)
     if (req.method === 'POST' && parts[2] === 'start') share.start() // asynchrone : le client suit l'état
     else if (req.method === 'POST' && parts[2] === 'stop') share.stop()
-    else if (req.method === 'POST' && parts[2] === 'code') share.regenerate()
     else if (req.method !== 'GET') return json(res, 404, { error: 'Route inconnue' })
     return json(res, 200, share.state)
   }
 
   if (parts[1] === 'info' && req.method === 'GET') {
-    return json(res, 200, { port: PORT, addresses: isRemote(req) ? [] : lanAddresses() })
+    return json(res, 200, { port: PORT, addresses: host ? lanAddresses() : [] })
   }
 
   if (parts[1] === 'boards') {
     const id = parts[2]
 
+    // liste : tout pour l'hôte, seulement les boards déverrouillés pour un invité
     if (!id && req.method === 'GET') {
-      return json(res, 200, listBoards().map((b) => ({ ...b, online: onlineCount(b.id), people: peopleOn(b.id) })))
+      const list = listBoards().filter((b) => host || canAccessBoard(req, b.id))
+      return json(res, 200, list.map((b) => ({ ...publicBoard(b), online: onlineCount(b.id), people: peopleOn(b.id) })))
     }
 
     if (!id && req.method === 'POST') {
+      if (!host) return json(res, 403, HOST_ONLY)
       const body = await readBody(req)
       const name = String(body.name || '').trim().slice(0, 80) || 'Board sans titre'
       let boardId = newId()
@@ -424,15 +487,47 @@ async function handleApi(req, res, url) {
       })
       await saveRoom(room)
       maybeUnload(room)
-      return json(res, 201, index[boardId])
+      return json(res, 201, publicBoard(index[boardId]))
     }
 
-    if (id && isValidId(id) && req.method === 'GET') {
-      if (!index[id]) return json(res, 404, { error: "Ce board n'existe pas ou a été supprimé." })
-      return json(res, 200, { ...listBoards().find((b) => b.id === id), online: onlineCount(id) })
+    if (!id || !isValidId(id)) return json(res, 404, { error: 'Route inconnue' })
+    const sub = parts[3]
+
+    // un invité saisit le code du board
+    if (sub === 'access' && req.method === 'POST') {
+      if (tooManyAttempts(req)) return json(res, 429, { error: 'Trop d’essais. Réessaie dans quelques minutes.' })
+      const body = await readBody(req)
+      const entry = index[id]
+      const clean = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+      if (!entry || !entry.code || !safeEqual(clean, entry.code.replace('-', ''))) {
+        return json(res, 401, { error: 'Ce code ne correspond pas. Vérifie-le auprès de la personne qui t’a invité.' })
+      }
+      const secure = isRemote(req) ? '; Secure' : ''
+      res.setHeader('Set-Cookie', `${cookieName(id)}=${tokenFor(id, entry.code)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${secure}`)
+      return json(res, 200, { ok: true })
     }
 
-    if (id && isValidId(id) && req.method === 'DELETE') {
+    // code d'invitation du board (hôte)
+    if (sub === 'invite') {
+      if (!host) return json(res, 403, HOST_ONLY)
+      if (!index[id]) return json(res, 404, { error: "Ce board n'existe pas." })
+      if (req.method === 'POST') {
+        index[id].code = newCode()
+        saveIndexSoon()
+        kickGuests(id)
+      }
+      return json(res, 200, { code: boardCode(id) })
+    }
+
+    if (!sub && req.method === 'GET') {
+      if (!index[id]) return json(res, host ? 404 : 401, host ? { error: "Ce board n'existe pas ou a été supprimé." } : NEED_CODE)
+      if (!canAccessBoard(req, id)) return json(res, 401, NEED_CODE)
+      const b = listBoards().find((x) => x.id === id)
+      return json(res, 200, { ...publicBoard(b), online: onlineCount(id) })
+    }
+
+    if (!sub && req.method === 'DELETE') {
+      if (!host) return json(res, 403, HOST_ONLY)
       const room = rooms.get(id)
       if (room) {
         room.deleted = true
@@ -520,7 +615,7 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy()
     return
   }
-  if (!isAuthorized(req)) {
+  if (!canAccessBoard(req, match[1])) {
     socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n')
     socket.destroy()
     return

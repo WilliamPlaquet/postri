@@ -29,14 +29,23 @@ Tout est alors servi sur un seul port : http://localhost:3000 (et `http://<ton-I
 
 Au premier lancement, Windows demande si Node.js peut communiquer sur le réseau. Coche **Réseaux privés** et accepte, sinon les autres postes ne pourront pas se connecter.
 
-## Partager sur Internet
+## Inviter des personnes sur un board
 
-Depuis le PC qui héberge, le bouton « Partager » d'un board (ou le cadre « Inviter depuis n'importe où » de l'accueil) propose **Partager sur Internet**. Postri ouvre alors un tunnel Cloudflare gratuit et sans compte, puis affiche :
+**L'hôte** est la personne assise devant le PC qui fait tourner Postri (l'application ou `npm start`). Elle seule peut créer, supprimer et partager des boards, et elle n'a jamais de code à saisir.
 
-- un **lien public** en `https://….trycloudflare.com` ;
-- un **code d'accès** à 6 caractères, que les invités saisissent une fois.
+**Tous les autres sont des invités**, qu'ils viennent du réseau local ou d'Internet :
 
-Le lien change à chaque partage et s'arrête quand Postri est fermé. « Nouveau code » déconnecte les invités, qui doivent saisir le nouveau code. Seul le PC qui héberge peut démarrer ou arrêter le partage. Au premier partage, Postri télécharge `cloudflared` (le programme officiel de Cloudflare) dans son dossier de données.
+- chaque board a son propre **code d'accès** à 6 caractères (ex. `CEP-QX7`), visible par l'hôte dans « Partager » ;
+- un code n'ouvre **que son board** : l'accueil d'un invité ne montre que les boards dont il a saisi le code ;
+- les invités peuvent modifier le contenu du board, mais pas créer ni supprimer de boards ;
+- « Nouveau code » déconnecte les invités de ce board, qui doivent saisir le nouveau code ;
+- le code est retenu 30 jours dans le navigateur de l'invité.
+
+### Partager sur Internet
+
+Dans « Partager », l'hôte peut cliquer sur **Partager sur Internet**. Postri ouvre un tunnel Cloudflare gratuit et sans compte, et affiche un **lien public** en `https://….trycloudflare.com`. Les invités doivent quand même saisir le code du board.
+
+Le lien change à chaque partage et s'arrête quand Postri est fermé. Au premier partage, Postri télécharge `cloudflared` (le programme officiel de Cloudflare) dans son dossier de données.
 
 ## Application Windows
 
@@ -88,7 +97,7 @@ Cliquer sur l'avatar d'un participant centre la vue sur son curseur.
 ```
 server/index.js           serveur HTTP + WebSocket (synchro Yjs, présence, sauvegarde, API des boards)
 server/templates.js       contenu de départ des modèles (Speedboat, Kanban, Brainstorm, architecture)
-server/share.js           partage sur Internet (tunnel Cloudflare) et code d'accès
+server/share.js           lien public sur Internet (tunnel Cloudflare)
 electron/main.js          application de bureau : démarre le serveur et ouvre la fenêtre
 site/                     landing page (GitHub Pages)
 .github/workflows/        publication de la landing page et de l'installeur Windows
@@ -99,19 +108,22 @@ src/components/ElementView.tsx   rendu des éléments
 src/components/Overlay.tsx       sélection, poignées, curseurs des autres
 src/components/Inspector.tsx     panneau de style
 src/components/Chrome.tsx        barre du haut, barre d'outils, zoom, aide
-src/components/Share.tsx         partage sur Internet et écran du code d'accès
+src/components/Share.tsx         invitation (code du board, liens), écran du code d'accès
 src/lib/useBoard.ts       connexion Yjs, présence, annuler/rétablir
 src/lib/geometry.ts       calculs (flèches accrochées, boîtes, tracés)
 ```
 
 ### API du serveur
 
-- `GET /api/boards` : liste des boards
+- `GET /api/boards` : liste des boards (tous pour l'hôte, ceux déverrouillés pour un invité)
 - `POST /api/boards` `{ "name": "...", "template": "blank" | "speedboat" | "kanban" | "brainstorm" | "architecture" }` : crée un board, vide ou à partir d'un modèle
 - `GET /api/boards/:id` : infos d'un board
 - `DELETE /api/boards/:id` : supprime un board
 - `GET /api/info` : adresses IP du serveur sur le réseau
 - `WS /ws/:id` : synchronisation temps réel (protocole y-websocket)
-- `GET /api/session` : le visiteur vient-il du lien public, a-t-il saisi le code, est-il sur le PC qui héberge
-- `POST /api/access` `{ "code": "ABC-123" }` : vérifie le code d'accès d'un invité
-- `GET /api/share`, `POST /api/share/start`, `POST /api/share/stop`, `POST /api/share/code` : partage sur Internet (PC qui héberge uniquement)
+- `GET /api/session` : le visiteur est-il l'hôte, vient-il du lien public
+- `POST /api/boards/:id/access` `{ "code": "ABC-123" }` : un invité saisit le code d'un board
+- `GET /api/boards/:id/invite`, `POST /api/boards/:id/invite` : voir ou changer le code d'un board (hôte)
+- `GET /api/share`, `POST /api/share/start`, `POST /api/share/stop` : lien public sur Internet (hôte)
+
+Création et suppression de boards : hôte uniquement. Un invité ne voit que les boards dont il a le code.

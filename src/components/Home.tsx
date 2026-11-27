@@ -5,7 +5,7 @@ import { initials } from '../lib/user'
 import { Icon } from './icons'
 import { useLanUrl } from '../lib/useLanUrl'
 import { useSession } from '../lib/session'
-import { InternetShare } from './Share'
+import { TunnelBanner } from './Share'
 
 /* ------------------------------------------------------------------ */
 
@@ -164,6 +164,20 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
 
   const shown = boards ? (showAll ? boards : boards.slice(0, RECENT)) : []
 
+  if (!session.host) {
+    return (
+      <GuestHome
+        boards={boards}
+        error={error}
+        user={user}
+        onOpen={onOpen}
+        onEditUser={onEditUser}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+      />
+    )
+  }
+
   return (
     <div className="home">
       <header className="home-top">
@@ -224,17 +238,12 @@ export function Home({ user, onOpen, onEditUser, theme, onToggleTheme }: Props) 
             ))}
           </div>
 
-          {lan && !session.remote && (
+          {lan && (
             <p className="lan-hint">
               Sur ton réseau, tes collègues rejoignent sur <a href={lan}>{lan}</a>
             </p>
           )}
-          {session.host && (
-            <div className="home-share">
-              <h2>Inviter depuis n’importe où</h2>
-              <InternetShare path="/" />
-            </div>
-          )}
+          <TunnelBanner />
         </div>
       </section>
 
@@ -338,5 +347,85 @@ export function Logo({ size = 28 }: { size?: number }) {
       <rect x="9" y="8" width="20" height="20" rx="3" fill="var(--c-cobalt)" />
       <path d="M14 18h10M14 22h6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Accueil des invités : seulement les boards déverrouillés            */
+/* ------------------------------------------------------------------ */
+
+function GuestHome({
+  boards,
+  error,
+  user,
+  onOpen,
+  onEditUser,
+  theme,
+  onToggleTheme,
+}: {
+  boards: BoardSummary[] | null
+  error: string | null
+  user: UserInfo
+  onOpen: (id: string) => void
+  onEditUser: () => void
+  theme: 'light' | 'dark'
+  onToggleTheme: () => void
+}) {
+  return (
+    <div className="home">
+      <header className="home-top">
+        <div className="brand">
+          <Logo />
+          <span>Postri</span>
+        </div>
+        <div className="home-top-actions">
+          <button className="icon-btn" onClick={onToggleTheme} aria-label="Changer de thème" title="Changer de thème">
+            {theme === 'dark' ? <Icon.Sun /> : <Icon.Moon />}
+          </button>
+          <button className="me" onClick={onEditUser} title="Modifier ton profil">
+            <span className="avatar" style={{ background: user.color }}>
+              {initials(user.name)}
+            </span>
+            {user.name}
+          </button>
+        </div>
+      </header>
+      <section className="home-hero">
+        <div className="home-hero-inner guest-hero">
+          <h1>Tes boards partagés</h1>
+          <p className="guest-lead">
+            Tu es invité sur ce Postri. Pour rejoindre un autre board, ouvre le lien que t’a envoyé la personne qui l’héberge et
+            saisis son code.
+          </p>
+        </div>
+      </section>
+      <section className="home-recent" aria-labelledby="guest-title">
+        <h2 id="guest-title" className="guest-title">
+          Boards déjà ouverts
+        </h2>
+        {error && <p className="error">{error}</p>}
+        {boards?.length === 0 && <p className="muted recent-empty">Aucun pour l’instant.</p>}
+        {boards && boards.length > 0 && (
+          <ul className="guest-list">
+            {boards.map((b) => (
+              <li key={b.id}>
+                <a
+                  className="recent-name"
+                  href={`#/b/${b.id}`}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onOpen(b.id)
+                  }}
+                >
+                  <span className="recent-swatch" style={{ background: swatchFor(b.id) }} aria-hidden="true" />
+                  {b.name}
+                </a>
+                <span className="muted small">modifié {ago(b.updatedAt)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   )
 }
