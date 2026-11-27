@@ -1,41 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#E6EAF1"/>
-    </linearGradient>
-    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
-      <circle cx="16" cy="16" r="2.4" fill="#C3CAD6"/>
-    </pattern>
-    <filter id="sh" x="-30%" y="-30%" width="160%" height="170%">
-      <feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#1B2230" flood-opacity="0.24"/>
-    </filter>
-    <filter id="sh2" x="-30%" y="-30%" width="160%" height="170%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#1B2230" flood-opacity="0.28"/>
-    </filter>
-    <clipPath id="tile"><rect x="16" y="16" width="480" height="480" rx="112"/></clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EAF1FF"/><stop offset="1" stop-color="#C5D5FF"/></linearGradient>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="11" cy="11" r="2.2" fill="#C9D0DC"/></pattern>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="10"/></filter>
   </defs>
   <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#dots)" clip-path="url(#tile)" opacity="0.9"/>
-  <!-- post-it du fond -->
-  <g filter="url(#sh)" transform="rotate(-14 210 250)">
-    <rect x="98" y="132" width="224" height="224" rx="16" fill="#9FE3B6"/>
+  <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" fill="none" stroke="#1B2230" stroke-opacity="0.08"/>
+  <!-- ombre du plateau -->
+  <ellipse cx="256" cy="372" rx="190" ry="44" fill="#2F4FB8" opacity="0.28" filter="url(#soft)"/>
+  <!-- épaisseur du plateau -->
+  <path d="M65.5 250 L256 360 L256 382 L65.5 272 Z" fill="#C9D1DF"/>
+  <path d="M256 360 L446.5 250 L446.5 272 L256 382 Z" fill="#B3BDCE"/>
+  <!-- dessus du plateau (repère isométrique) -->
+  <g transform="matrix(0.866 0.5 -0.866 0.5 256 140)">
+    <rect x="0" y="0" width="220" height="220" rx="14" fill="#FAFBFD"/>
+    <rect x="0" y="0" width="220" height="220" rx="14" fill="url(#dots)"/>
+    <!-- ombres portées des post-its -->
+    <rect x="30" y="30" width="78" height="78" rx="6" fill="#1B2230" opacity="0.16"/>
+    <rect x="128" y="40" width="64" height="64" rx="6" fill="#1B2230" opacity="0.16"/>
+    <rect x="44" y="128" width="64" height="64" rx="6" fill="#1B2230" opacity="0.16"/>
   </g>
-  <!-- post-it du milieu -->
-  <g filter="url(#sh)" transform="rotate(-5 240 250)">
-    <rect x="124" y="118" width="232" height="232" rx="16" fill="#FFDA5C"/>
+  <!-- post-its soulevés -->
+  <g transform="translate(0 -18)">
+    <g transform="matrix(0.866 0.5 -0.866 0.5 256 140)">
+      <rect x="24" y="24" width="78" height="78" rx="6" fill="#FFD43B"/>
+      <rect x="122" y="34" width="64" height="64" rx="6" fill="#FF8FB5"/>
+      <rect x="38" y="122" width="64" height="64" rx="6" fill="#7FD89E"/>
+      <rect x="38" y="44" width="50" height="9" rx="4.5" fill="#1B2230" opacity="0.45"/>
+      <rect x="38" y="62" width="34" height="9" rx="4.5" fill="#1B2230" opacity="0.3"/>
+    </g>
   </g>
-  <!-- post-it du dessus, coin replié -->
-  <g filter="url(#sh)" transform="rotate(5 280 270)">
-    <path d="M168 136 H372 a16 16 0 0 1 16 16 V316 L332 372 H168 a16 16 0 0 1 -16 -16 V152 a16 16 0 0 1 16 -16 Z" fill="#2F5BFF"/>
-    <path d="M388 316 L332 372 V330 a14 14 0 0 1 14 -14 Z" fill="#1E3FC7"/>
-    <rect x="190" y="182" width="150" height="20" rx="10" fill="#FFFFFF"/>
-    <rect x="190" y="222" width="112" height="20" rx="10" fill="#FFFFFF" opacity="0.78"/>
-    <rect x="190" y="262" width="132" height="20" rx="10" fill="#FFFFFF" opacity="0.78"/>
-  </g>
-  <!-- curseur d'un collègue -->
-  <g filter="url(#sh2)" transform="translate(392 352)">
-    <path d="M0 0 L66 34 L36 42 L22 72 Z" fill="#FF5A5F" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round"/>
-  </g>
-  <rect x="16.5" y="16.5" width="479" height="479" rx="111.5" fill="none" stroke="#1B2230" stroke-opacity="0.10"/>
 </svg>
